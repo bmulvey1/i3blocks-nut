@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+import sys
+import PyNUT
+
+HOST = "127.0.0.1"
+PORT = 3493
+USER = "username"
+PASSWORD = "password"
+UPSNAME = "upsname"
+
+"""
+Adapted from https://github.com/amyeo/i3blocks-apcups
+"""
+
+ups = PyNUT.PyNUTClient(HOST, PORT, USER, PASSWORD)
+
+if not ups.CheckUPSAvailable(UPSNAME):
+    print("⚠️ UPS Unavailable")
+    sys.exit()
+
+output = []
+
+upsvars = ups.GetUPSVars(UPSNAME)
+
+if "OL" in upsvars[b'ups.status'].decode('ascii'): # on line power
+    output.append(f"<span>🔌{upsvars[b'input.voltage'].decode('ascii')}V</span>")
+    output.append(f"<span>🔋{upsvars[b'battery.charge'].decode('ascii')}%</span>")
+    output.append(f"<span>⌛{int(upsvars[b'battery.runtime'].decode('ascii'))/60}m</span>")
+else:
+    output.append("<span color=\"red\">⚠️ ON BATT</span>")
+    output.append(f"<span>🔋{upsvars[b'battery.charge'].decode('ascii')}%</span>")
+    output.append(f"<span>⌛{int(upsvars[b'battery.runtime'].decode('ascii'))/60}m</span>")
+
+print("".join(output))
